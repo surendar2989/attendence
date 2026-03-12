@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Attendance System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f172a;color:#f1f5f9;font-family:system-ui,sans-serif;min-height:100vh}
+input,select,button,textarea{font-family:inherit}
+.hidden{display:none!important}
+
+/* Layout */
+.page{min-height:100vh}
+.center{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;background:linear-gradient(135deg,#0f172a,#1e3a5f 50%,#0f172a)}
+.card{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:20px;margin-bottom:14px}
+.hdr{background:linear-gradient(90deg,#0f3460,#1e3a5f);border-bottom:3px solid #f97316;padding:12px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stats{background:#0f3460;padding:8px 18px;display:flex;gap:22px;flex-wrap:wrap;border-bottom:2px solid #f97316}
+.toolbar{background:#1e293b;padding:9px 18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-bottom:1px solid #334155}
+.sec-title{font-size:11px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+.row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#0f172a;border-radius:8px;margin-bottom:8px;flex-wrap:wrap}
+
+/* Inputs */
+.inp{background:#0f172a;border:1px solid #475569;border-radius:6px;color:#f1f5f9;padding:8px 12px;font-size:13px;outline:none;width:100%}
+.inp:focus{border-color:#f97316}
+.sel{background:#0f172a;border:1px solid #475569;border-radius:6px;color:#f1f5f9;padding:7px 10px;font-size:13px;outline:none}
+
+/* Buttons */
+.btn{border:none;border-radius:6px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+.btn-or{background:#f97316;color:#000}
+.btn-gr{background:#16a34a;color:#fff}
+.btn-bl{background:#2563eb;color:#fff}
+.btn-pu{background:#7c3aed;color:#fff}
+.btn-gy{background:#1e293b;color:#94a3b8}
+.btn-rd{background:#dc2626;color:#fff}
+.btn-sm{padding:5px 12px;font-size:11px}
+
+/* Toast */
+#toast{position:fixed;top:16px;right:16px;z-index:9999;padding:11px 18px;border-radius:8px;font-size:13px;font-weight:600;max-width:300px;display:none;box-shadow:0 8px 24px rgba(0,0,0,.7)}
+
+/* Table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{padding:8px;font-size:10px;font-weight:700;color:#f97316;text-transform:uppercase;letter-spacing:.7px;border-bottom:2px solid #334155;white-space:nowrap}
+td{padding:7px 8px}
+.tr-even{background:#1e293b}
+.tr-odd{background:#0f172a}
+.num-inp{background:#0f172a;border:1px solid #334155;border-radius:5px;color:#f1f5f9;padding:4px 6px;width:56px;text-align:center;font-size:13px;outline:none}
+.ot-inp{border-color:#f97316;color:#fbbf24}
+.notes-inp{background:#0f172a;border:1px solid #334155;border-radius:5px;color:#94a3b8;padding:4px 7px;width:80px;font-size:11px;outline:none}
+
+/* Badge pill */
+.pill{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:700;border:1px solid}
+
+/* Print */
+@media print{.no-print{display:none!important}body{background:#fff;color:#000}}
+
+/* Spinner */
+.spin{width:40px;height:40px;border:4px solid #1e293b;border-top:4px solid #f97316;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* Setup banner */
+.setup-banner{background:#1a0505;border:2px solid #ef4444;border-radius:10px;padding:20px;margin-bottom:16px;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- PASSWORD LOCK SCREEN -->
+<div id="scr-lock" class="center">
+  <div style="width:380px;max-width:100%;text-align:center">
+    <div style="font-size:52px;margin-bottom:12px">🔒</div>
+    <div style="font-size:22px;font-weight:900;letter-spacing:2px;color:#fff;text-transform:uppercase">Site Attendance</div>
+    <div style="font-size:11px;color:#f97316;margin-top:4px;letter-spacing:1px;margin-bottom:28px">CONSTRUCTION MANAGEMENT SYSTEM</div>
+    <div class="card">
+      <div class="sec-title">Enter App Password</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="lock-pw" class="inp" type="password" placeholder="Enter password" style="flex:1" onkeydown="if(event.key==='Enter')checkLock()">
+        <button class="btn btn-or" onclick="checkLock()">Enter</button>
+      </div>
+      <div id="lock-err" style="color:#ef4444;font-size:12px;display:none;margin-top:6px">❌ Wrong password. Try again.</div>
+    </div>
+    <div style="font-size:11px;color:#334155;margin-top:8px">Contact your admin for the password</div>
+  </div>
+</div>
+
+<!-- SETUP SCREEN -->
+<div id="scr-setup" class="center">
+  <div style="width:520px;max-width:100%">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:48px">🏗</div>
+      <div style="font-size:22px;font-weight:900;letter-spacing:2px;color:#fff;text-transform:uppercase;margin-top:6px">Site Attendance</div>
+      <div style="font-size:11px;color:#f97316;margin-top:3px;letter-spacing:1px">CONSTRUCTION MANAGEMENT SYSTEM</div>
+    </div>
+    <div class="setup-banner">
+      <div style="font-weight:700;color:#ef4444;margin-bottom:8px;font-size:14px">⚙️ ONE-TIME SETUP REQUIRED</div>
+      <div style="color:#fca5a5;font-size:13px">
+        This app needs a free cloud database to share data between foremen.<br><br>
+        <b style="color:#fff">Steps (takes 2 minutes):</b><br>
+        1. Go to <a href="https://jsonbin.io" target="_blank" style="color:#60a5fa">jsonbin.io</a> → Sign up free<br>
+        2. Click <b style="color:#fff">+ New Bin</b> → paste <code style="background:#0f172a;padding:2px 6px;border-radius:3px">{"foremen":[],"supers":[]}</code> → Create<br>
+        3. Copy the <b style="color:#fff">BIN ID</b> (looks like: 64abc123...)<br>
+        4. Go to Account → API Keys → copy your <b style="color:#fff">Master Key</b><br>
+        5. Paste both below:
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">Database Configuration</div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:12px;color:#94a3b8;display:block;margin-bottom:4px">JSONBin.io Bin ID</label>
+        <input id="cfg-binid" class="inp" placeholder="e.g. 64abc123def456..." style="width:100%">
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;color:#94a3b8;display:block;margin-bottom:4px">JSONBin.io API Master Key</label>
+        <input id="cfg-apikey" class="inp" type="password" placeholder="$2b$10$..." style="width:100%">
+      </div>
+      <button class="btn btn-or" style="width:100%;padding:11px" onclick="saveConfig()">✅ Save & Connect</button>
+      <div style="margin-top:10px;text-align:center">
+        <span style="font-size:11px;color:#475569">Already configured? </span>
+        <button onclick="loadConfig()" style="background:none;border:none;color:#60a5fa;font-size:11px;cursor:pointer;font-weight:600">Load saved config</button>
+      </div>
+    </div>
+    <div class="card" style="background:#0f2744;border-color:#1d4ed8">
+      <div style="font-size:12px;color:#94a3b8;line-height:1.7">
+        <b style="color:#60a5fa">💡 Alternative (simpler):</b> Use <b style="color:#fff">localStorage</b> — works on one device only, no cloud sync.<br>
+        Good for testing or if only 1 person manages everything.<br>
+        <button onclick="useLocalOnly()" style="background:none;border:1px solid #334155;color:#94a3b8;font-size:11px;cursor:pointer;padding:4px 10px;border-radius:5px;margin-top:6px">Use Local Storage Only (no sharing)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="scr-login" class="center hidden">
+  <div style="width:490px;max-width:100%">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:48px">🏗</div>
+      <div style="font-size:22px;font-weight:900;letter-spacing:2px;color:#fff;text-transform:uppercase;margin-top:6px">Site Attendance</div>
+      <div style="font-size:11px;color:#f97316;margin-top:3px;letter-spacing:1px">CONSTRUCTION · SUPERVISOR APPROVAL SYSTEM</div>
+    </div>
+    <div style="display:flex;border-radius:8px 8px 0 0;overflow:hidden;border:1px solid #334155">
+      <button onclick="loginTab('foreman')" id="tab-foreman" style="flex:1;padding:11px;border:none;font-weight:700;font-size:13px;cursor:pointer;background:#f97316;color:#000">👷 Foreman</button>
+      <button onclick="loginTab('supervisor')" id="tab-supervisor" style="flex:1;padding:11px;border:none;font-weight:700;font-size:13px;cursor:pointer;background:#1e293b;color:#94a3b8">🔍 Supervisor</button>
+    </div>
+    <div class="card" style="border-radius:0 0 10px 10px;border-top:none;margin-bottom:12px">
+      <div id="login-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px"></div>
+    </div>
+    <div class="card">
+      <div class="sec-title">Admin Access</div>
+      <div id="admin-area">
+        <button class="btn btn-gy" style="width:100%" onclick="document.getElementById('admin-pw-row').classList.remove('hidden')">🔐 Admin Login</button>
+      </div>
+      <div id="admin-pw-row" class="hidden" style="display:flex;gap:8px">
+        <input id="admin-pw" class="inp" type="password" placeholder="Password: admin123" style="flex:1" onkeydown="if(event.key==='Enter')checkAdmin()">
+        <button class="btn btn-or" onclick="checkAdmin()">Enter</button>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:8px">
+      <button onclick="showSetup()" style="background:none;border:none;color:#475569;font-size:11px;cursor:pointer">⚙️ Change database settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOREMAN SCREEN -->
+<div id="scr-foreman" class="page hidden">
+  <div class="hdr">
+    <button class="btn btn-gy btn-sm" onclick="goLogin()">← Back</button>
+    <div style="flex:1"><div id="fm-name" style="font-weight:800;font-size:17px;color:#fff"></div><div id="fm-site" style="font-size:11px;color:#f97316"></div></div>
+    <div id="fm-appr" style="background:#64748b22;border:1px solid #64748b;color:#64748b;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700">Not reviewed</div>
+    <input type="date" id="fm-date" class="inp" style="width:auto" onchange="loadAttendance()">
+  </div>
+  <div class="stats" id="fm-stats"></div>
+  <div id="fm-job-row"></div>
+  <div id="fm-appr-banner"></div>
+  <div class="toolbar">
+    <span style="font-size:11px;font-weight:700;color:#f97316">ALL:</span>
+    <input type="number" id="gN" value="8" min="0" max="24" step="0.5" class="num-inp" style="width:56px">
+    <span style="font-size:11px;color:#64748b">OT:</span>
+    <input type="number" id="gO" value="0" min="0" max="12" step="0.5" class="num-inp ot-inp" style="width:56px">
+    <button class="btn btn-or btn-sm" onclick="applyAll()">Apply All</button>
+    <div style="flex:1"></div>
+    <button class="btn btn-bl btn-sm" onclick="toggleAddRow()">+ Worker</button>
+    <button class="btn btn-gr" id="save-btn" onclick="saveAttendance()">💾 Save</button>
+    <button class="btn btn-pu btn-sm" onclick="submitReview()">📨 Submit</button>
+    <button class="btn btn-sm" style="background:#0f3460;color:#60a5fa" onclick="showDailyCard()">📋 Daily Card</button>
+  </div>
+  <div id="add-row" class="hidden" style="background:#0f172a;padding:9px 18px;display:flex;gap:7px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #334155">
+    <input id="nw-name" class="inp" placeholder="Worker name *" style="flex:2;min-width:130px" onkeydown="if(event.key==='Enter')addWorkerRow()">
+    <select id="nw-role" class="sel" id="nw-role"></select>
+    <input id="nw-badge" class="inp" placeholder="Badge" style="width:84px">
+    <button class="btn btn-gr btn-sm" onclick="addWorkerRow()">Add</button>
+  </div>
+  <div id="fm-table-wrap" style="overflow-x:auto;padding:14px 18px 60px"></div>
+</div>
+
+<!-- SUPERVISOR SCREEN -->
+<div id="scr-supervisor" class="page hidden">
+  <div class="hdr" style="border-bottom-color:#3b82f6">
+    <button class="btn btn-gy btn-sm" onclick="goLogin()">← Back</button>
+    <div style="flex:1"><div id="sv-name" style="font-weight:800;font-size:17px;color:#fff"></div><div style="font-size:11px;color:#60a5fa">Supervisor · Review</div></div>
+    <input type="date" id="sv-date" class="inp" style="width:auto" onchange="loadSupervisor()">
+    <button class="btn btn-sm" style="background:#1e293b;color:#60a5fa" onclick="loadSupervisor()">🔄</button>
+  </div>
+  <div id="sv-summary" style="display:flex;gap:10px;padding:14px 18px;flex-wrap:wrap"></div>
+  <div id="sv-content" style="padding:0 18px 40px;max-width:860px;margin:0 auto"></div>
+</div>
+
+<!-- ADMIN SCREEN -->
+<div id="scr-admin" class="page hidden">
+  <div class="hdr">
+    <button class="btn btn-gy btn-sm" onclick="goLogin()">← Logout</button>
+    <div style="font-weight:900;font-size:17px;color:#f97316;letter-spacing:2px;flex:1">🔐 ADMIN</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-sm" id="atab-foremen" onclick="adminTab('foremen')" style="background:#f97316;color:#000">👷 Foremen</button>
+      <button class="btn btn-sm btn-gy" id="atab-supervisors" onclick="adminTab('supervisors')">🔍 Supervisors</button>
+      <button class="btn btn-sm btn-gy" id="atab-roster" onclick="adminTab('roster')">📋 Rosters</button>
+      <button class="btn btn-sm btn-gy" id="atab-occupations" onclick="adminTab('occupations')">🔧 Occupations</button>
+      <button class="btn btn-sm btn-gy" id="atab-jobs" onclick="adminTab('jobs')">📁 Jobs</button>
+      <button class="btn btn-sm btn-gy" id="atab-monthly" onclick="adminTab('monthly')">📅 Monthly</button>
+      <button class="btn btn-sm btn-gy" id="atab-settings" onclick="adminTab('settings')">⚙️ Settings</button>
+    </div>
+  </div>
+  <div id="admin-content" style="padding:18px;max-width:960px;margin:0 auto"></div>
+</div>
+
+<!-- DAILY CARD (print view) -->
+<div id="scr-dailycard" class="hidden" style="background:#fff;min-height:100vh;padding:20px;color:#000;font-family:Arial,sans-serif">
+  <div class="no-print" style="display:flex;justify-content:space-between;margin-bottom:16px">
+    <button onclick="hideDailyCard()" style="background:#1e293b;color:#fff;border:none;border-radius:6px;padding:7px 16px;cursor:pointer;font-weight:700">← Back</button>
+    <button onclick="window.print()" style="background:#f97316;color:#000;border:none;border-radius:6px;padding:7px 20px;cursor:pointer;font-weight:700">🖨 Print</button>
+  </div>
+  <div id="daily-card-body"></div>
+</div>
+
+<!-- MONTHLY CARD (print view) -->
+<div id="scr-monthlycard" class="hidden" style="background:#fff;min-height:100vh;padding:20px;color:#000;font-family:Arial,sans-serif">
+  <div class="no-print" style="display:flex;justify-content:space-between;margin-bottom:16px">
+    <button onclick="hideMonthlyCard()" style="background:#1e293b;color:#fff;border:none;border-radius:6px;padding:7px 16px;cursor:pointer;font-weight:700">← Back</button>
+    <button onclick="window.print()" style="background:#f97316;color:#000;border:none;border-radius:6px;padding:7px 20px;cursor:pointer;font-weight:700">🖨 Print</button>
+  </div>
+  <div id="monthly-card-body"></div>
+</div>
+
+<script>
+// ─── CONFIG & STATE ──────────────────────────────────────────────────────────
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let ROLES  = ['Labour','Mason','Electrician','Operator','Driver','Jointer'];
+const ROLE_COLORS=['#1d4ed8','#15803d','#b45309','#7c3aed','#0e7490','#be185d','#c2410c','#4d7c0f','#1e40af','#9333ea'];
+function roleColor(role){ const i=ROLES.indexOf(role); return i>=0?ROLE_COLORS[i%ROLE_COLORS.length]:'#475569'; }
+const STATUS = [{v:'P',l:'Present',c:'#22c55e'},{v:'A',l:'Absent',c:'#ef4444'},{v:'HD',l:'Half Day',c:'#f59e0b'},{v:'L',l:'Leave',c:'#a855f7'}];
+
+let CFG     = {binId:'69b22774b7ec241ddc5fcb6d',apiKey:'$2a$10$i3Yb./EY6dZe.mthdu/SFe6ObUJHEM2ZGvAPvI6QWSQj/m7Jl34YW',localOnly:false};
+let DB      = {foremen:[],supers:[],customRoles:[],jobs:[]};   // cloud/local config
+let ATT     = {};                        // local attendance cache {key: data}
+let ME      = null;
+let CUR_TAB = 'foreman';
+let ADMIN_TAB= 'foremen';
+let ROSTER_FM= null;
+
+// ─── STORAGE ─────────────────────────────────────────────────────────────────
+function lsGet(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch{return null;} }
+function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){ console.error(e); } }
+
+async function cloudGet(path){
+  if(CFG.localOnly) return lsGet('att_'+path);
+  try{
+    const r=await fetch('https://api.jsonbin.io/v3/b/'+CFG.binId+'/latest',{headers:{'X-Master-Key':CFG.apiKey}});
+    if(!r.ok) return null;
+    const d=await r.json();
+    const record=d.record||{};
+    return record[path]||null;
+  }catch(e){ console.error('cloudGet',e); return null; }
+}
+
+async function cloudSet(path, val){
+  if(CFG.localOnly){ lsSet('att_'+path, val); return true; }
+  try{
+    // Get current bin
+    const r1=await fetch('https://api.jsonbin.io/v3/b/'+CFG.binId+'/latest',{headers:{'X-Master-Key':CFG.apiKey}});
+    if(!r1.ok) throw new Error('fetch failed');
+    const d=await r1.json();
+    const record=Object.assign({},d.record||{});
+    record[path]=val;
+    // Update bin
+    const r2=await fetch('https://api.jsonbin.io/v3/b/'+CFG.binId,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':CFG.apiKey},
+      body:JSON.stringify(record)
+    });
+    return r2.ok;
+  }catch(e){ console.error('cloudSet',e); return false; }
+}
+
+async function cloudGetDB(){
+  if(CFG.localOnly){ const d=lsGet('maindb'); return d||{foremen:[],supers:[],customRoles:[],jobs:[]}; }
+  try{
+    const r=await fetch('https://api.jsonbin.io/v3/b/'+CFG.binId+'/latest',{headers:{'X-Master-Key':CFG.apiKey}});
+    if(!r.ok) return {foremen:[],supers:[],customRoles:[],jobs:[]};
+    const d=await r.json();
+    const rec=d.record||{};
+    return {
+      foremen:Array.isArray(rec.foremen)?rec.foremen:[],
+      supers:Array.isArray(rec.supers)?rec.supers:[],
+      customRoles:Array.isArray(rec.customRoles)?rec.customRoles:[],
+      jobs:Array.isArray(rec.jobs)?rec.jobs:[],
+      adminPw:rec.adminPw||null,
+      unlockPw:rec.unlockPw||null
+    };
+  }catch(e){ console.error(e); return {foremen:[],supers:[],customRoles:[],jobs:[]}; }
+}
+
+async function cloudSetDB(db){
+  if(CFG.localOnly){ lsSet('maindb',db); return true; }
+  try{
+    const r1=await fetch('https://api.jsonbin.io/v3/b/'+CFG.binId+'/latest',{headers:{'X-Master-Key':CFG.apiKey}});
+    const existing=(r1.ok?(await r1.json()).record:{})||{};
+    const merged=Object.assign({},existing,{
+      foremen:db.foremen,
+      supers:db.supers,
+      customRoles:db.customRoles||[],
+      jobs:db.jobs||[],
+      adminPw:db.adminPw||existing.adminPw||null,
+      unlockPw:db.unlockPw||existing.unlockPw||null
+    });
+    const r2=await fetch('https://api.jsonbin.io/v3/b/'+CFG.binId,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':CFG.apiKey},
+      body:JSON.stringify(merged)
+    });
+    return r2.ok;
+  }catch(e){ console.error(e); return false; }
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg,type='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.style.background=type==='err'?'#450a0a':'#052e16';
+  el.style.border='2px solid '+(type==='err'?'#ef4444':'#22c55e');
+  el.style.color='#fff';
+  el.style.display='block';
+  setTimeout(()=>el.style.display='none',3200);
+}
+
+// ─── SCREEN SWITCHING ─────────────────────────────────────────────────────────
+function showOnly(id){
+  ['scr-lock','scr-setup','scr-login','scr-foreman','scr-supervisor','scr-admin','scr-dailycard','scr-monthlycard']
+    .forEach(s=>document.getElementById(s).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function showSetup(){ showOnly('scr-setup'); }
+function goLogin(){ ME=null; showOnly('scr-login'); renderLogin(); }
+
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+function saveConfig(){
+  const binId=document.getElementById('cfg-binid').value.trim();
+  const apiKey=document.getElementById('cfg-apikey').value.trim();
+  if(!binId||!apiKey){ toast('Enter both Bin ID and API Key','err'); return; }
+  CFG={binId,apiKey,localOnly:false};
+  lsSet('app_cfg',CFG);
+  toast('Connecting…');
+  initApp();
+}
+
+function loadConfig(){
+  const saved=lsGet('app_cfg');
+  if(!saved){ toast('No saved config found','err'); return; }
+  CFG=saved;
+  document.getElementById('cfg-binid').value=CFG.binId||'';
+  document.getElementById('cfg-apikey').value=CFG.apiKey||'';
+  toast('Config loaded!');
+  initApp();
+}
+
+function useLocalOnly(){
+  CFG={binId:'',apiKey:'',localOnly:true};
+  lsSet('app_cfg',CFG);
+  toast('Using local storage');
+  initApp();
+}
+
+async function initApp(){
+  toast('Loading…');
+  DB=await cloudGetDB();
+  // Merge custom roles
+  const base=['Labour','Mason','Electrician','Operator','Driver','Jointer'];
+  ROLES=base.concat((DB.customRoles||[]).filter(r=>!base.includes(r)));
+  lsSet('app_cfg',CFG);
+  showOnly('scr-login');
+  renderLogin();
+}
+
+// ─── LOGIN ─────────────────────────────────────────────────────────────────────
+function loginTab(t){
+  CUR_TAB=t;
+  document.getElementById('tab-foreman').style.background=t==='foreman'?'#f97316':'#1e293b';
+  document.getElementById('tab-foreman').style.color=t==='foreman'?'#000':'#94a3b8';
+  document.getElementById('tab-supervisor').style.background=t==='supervisor'?'#f97316':'#1e293b';
+  document.getElementById('tab-supervisor').style.color=t==='supervisor'?'#000':'#94a3b8';
+  renderLogin();
+}
+
+async function renderLogin(){
+  const list=CUR_TAB==='foreman'?DB.foremen:DB.supers;
+  const el=document.getElementById('login-list');
+  if(!list||list.length===0){
+    el.innerHTML='<div style="color:#475569;text-align:center;padding:12px;font-size:13px;grid-column:1/-1">No '+(CUR_TAB==='foreman'?'foremen':'supervisors')+' added — Admin must add them first.</div>';
+    return;
+  }
+  // For supervisors, show pending count badge
+  let pendingCount=0;
+  if(CUR_TAB==='supervisor'){
+    const d=new Date().toISOString().split('T')[0];
+    for(const f of DB.foremen){
+      const att=await cloudGet('att_'+f.id+'_'+d);
+      if(att&&att.submitted&&!att.approval) pendingCount++;
+    }
+  }
+  el.innerHTML=list.map(item=>`
+    <button onclick="loginAs('${item.id}')" style="background:#0f172a;border:1px solid ${CUR_TAB==='foreman'?'#334155':'#1d4ed8'};border-radius:8px;padding:12px 6px;cursor:pointer;color:#fff;display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;position:relative">
+      ${CUR_TAB==='supervisor'&&pendingCount>0?`<div style="position:absolute;top:6px;right:6px;background:#ef4444;color:#fff;font-size:10px;font-weight:900;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center">${pendingCount}</div>`:''}
+      <span style="font-size:26px">${CUR_TAB==='foreman'?'👷':'🔍'}</span>
+      <span style="font-weight:700;font-size:13px">${item.name}</span>
+      ${item.site?`<span style="font-size:10px;color:#f97316">${item.site}</span>`:''}
+    </button>
+  `).join('');
+}
+
+function loginAs(id){
+  const list=CUR_TAB==='foreman'?DB.foremen:DB.supers;
+  const item=list.find(x=>x.id===id);
+  if(!item) return;
+  ME={role:CUR_TAB,...item};
+  if(CUR_TAB==='foreman') openForeman();
+  else openSupervisor();
+}
+
+function checkAdmin(){
+  const pw=document.getElementById('admin-pw').value;
+  if(_checkAdmin(pw)){ ME={role:'admin'}; openAdmin(); }
+  else alert('Wrong password');
+}
+
+// ─── FOREMAN ──────────────────────────────────────────────────────────────────
+let FM_WORKERS=[];
+let FM_APPR=null;
+let FM_JOB=null;
+
+function populateRoleSelects(){
+  ['nw-role','rw-role'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML=ROLES.map(r=>`<option>${r}</option>`).join('');
+  });
+}
+
+function openForeman(){
+  showOnly('scr-foreman');
+  populateRoleSelects();
+  document.getElementById('fm-name').textContent='👷 '+ME.name;
+  document.getElementById('fm-site').textContent=ME.site||'';
+  const d=new Date().toISOString().split('T')[0];
+  document.getElementById('fm-date').value=d;
+  loadAttendance();
+}
+
+async function loadAttendance(){
+  const date=document.getElementById('fm-date').value;
+  const key='att_'+ME.id+'_'+date;
+  showLoading('fm-table-wrap');
+  const saved=await cloudGet(key);
+  if(saved&&Array.isArray(saved.workers)){
+    FM_WORKERS=saved.workers;
+    FM_APPR=saved.approval||null;
+    FM_JOB=saved.jobId||null;
+  } else {
+    const rkey='roster_'+ME.id;
+    const roster=await cloudGet(rkey);
+    FM_WORKERS=(Array.isArray(roster)?roster:[]).map(w=>({...w,status:'P',normal:8,ot:0,notes:''}));
+    FM_APPR=null;
+    FM_JOB=null;
+  }
+  // Auto-assign job from DB if foreman is assigned to a job
+  if(!FM_JOB){
+    const assigned=(DB.jobs||[]).find(j=>(j.assignedForemen||[]).includes(ME.id)&&j.status!=='Completed'&&j.status!=='Cancelled');
+    if(assigned) FM_JOB=assigned.id;
+  }
+  renderJobBanner();
+  renderFMTable();
+  renderApproval();
+}
+
+function renderJobBanner(){
+  const el=document.getElementById('fm-job-row');
+  if(!el) return;
+  const job=FM_JOB?(DB.jobs||[]).find(j=>j.id===FM_JOB):null;
+  // Also show all jobs assigned to this foreman for manual switch
+  const myJobs=(DB.jobs||[]).filter(j=>(j.assignedForemen||[]).includes(ME.id));
+  const statusColors={'Ongoing':'#3b82f6','Partially Completed':'#f59e0b','Completed':'#22c55e','On Hold':'#94a3b8','Cancelled':'#ef4444'};
+  if(!job&&myJobs.length===0){ el.innerHTML=''; return; }
+
+  const jobSel=myJobs.length>1?`
+    <select onchange="FM_JOB=this.value;renderJobBanner()" class="sel" style="font-size:12px;max-width:220px">
+      ${myJobs.map(j=>`<option value="${j.id}" ${FM_JOB===j.id?'selected':''}>${j.refNo||j.name}</option>`).join('')}
+    </select>`:'';
+
+  el.innerHTML=`<div style="background:#0f3460;padding:9px 18px;border-bottom:2px solid #1d4ed8;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:11px;font-weight:700;color:#60a5fa;white-space:nowrap">📁 JOB</span>
+    ${jobSel}
+    ${job?`
+      <b style="color:#fff;font-size:13px">${job.name}</b>
+      ${job.refNo?`<span style="font-size:11px;color:#94a3b8">Ref: <b style="color:#fbbf24">${job.refNo}</b></span>`:''}
+      ${job.poNo?`<span style="font-size:11px;color:#94a3b8">PO: <b style="color:#fbbf24">${job.poNo}</b></span>`:''}
+      ${job.type?`<span style="font-size:11px;color:#94a3b8">Type: <b style="color:#fff">${job.type}</b></span>`:''}
+      <span style="background:${statusColors[job.status]||'#334155'}33;border:1px solid ${statusColors[job.status]||'#334155'};color:${statusColors[job.status]||'#94a3b8'};border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700">${job.status}</span>
+    `:'<span style="color:#475569;font-size:12px">No active job assigned</span>'}
+  </div>`;
+}
+
+function showLoading(id){
+  document.getElementById(id).innerHTML='<div style="padding:30px;text-align:center;color:#475569">Loading…</div>';
+}
+
+function renderApproval(){
+  const el=document.getElementById('fm-appr');
+  const banner=document.getElementById('fm-appr-banner');
+
+  if(!FM_APPR){
+    el.innerHTML='⏳ Pending review';
+    el.style.cssText='background:#78350f22;border:1px solid #f59e0b;color:#f59e0b;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700';
+    if(banner) banner.innerHTML='<div style="background:#78350f22;border-bottom:2px solid #f59e0b;padding:8px 18px;font-size:12px;color:#f59e0b;font-weight:600">⏳ This attendance is <b>pending supervisor review</b> — not yet approved</div>';
+    return;
+  }
+  const ok=FM_APPR.status==='approved';
+  const c=ok?'#22c55e':'#ef4444';
+  const icon=ok?'✅':'❌';
+  const dt=FM_APPR.at?new Date(FM_APPR.at).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+
+  // Header badge
+  el.innerHTML=`${icon} <b>${ok?'APPROVED':'REJECTED'}</b> by ${FM_APPR.by}`;
+  el.style.cssText=`background:${c}18;border:1px solid ${c};color:${c};border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700`;
+
+  // Full banner inside page
+  if(banner) banner.innerHTML=`
+    <div style="background:${c}15;border-bottom:3px solid ${c};padding:12px 18px;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div style="font-size:28px;line-height:1">${icon}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:900;color:${c}">${ok?'ATTENDANCE APPROVED':'ATTENDANCE REJECTED'}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:3px">
+          By: <b style="color:#fff">${FM_APPR.by}</b>
+          ${dt?` &nbsp;·&nbsp; <span>${dt}</span>`:''}
+          ${FM_APPR.remarks?`<br>Remarks: <b style="color:#fff">"${FM_APPR.remarks}"</b>`:''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderFMTable(){
+  const tN=FM_WORKERS.reduce((s,w)=>s+(+w.normal||0),0);
+  const tO=FM_WORKERS.reduce((s,w)=>s+(+w.ot||0),0);
+  const pres=FM_WORKERS.filter(w=>w.status==='P'||w.status==='HD').length;
+  document.getElementById('fm-stats').innerHTML=
+    [['Workers',FM_WORKERS.length,'#fff'],['Present',pres,'#22c55e'],
+     ['Normal',tN.toFixed(1)+'h','#fff'],['OT',tO.toFixed(1)+'h','#f97316'],
+     ['Total',(tN+tO).toFixed(1)+'h','#fbbf24']].map(([l,v,c])=>
+    `<div style="text-align:center"><div style="font-size:18px;font-weight:900;color:${c}">${v}</div><div style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:1px">${l}</div></div>`
+  ).join('');
+
+  if(FM_WORKERS.length===0){
+    document.getElementById('fm-table-wrap').innerHTML='<div style="padding:40px;text-align:center;color:#475569">No workers — tap <b style="color:#f97316">+ Worker</b> above</div>';
+    return;
+  }
+
+  const rows=FM_WORKERS.map((w,i)=>{
+    const tot=(+w.normal||0)+(+w.ot||0);
+    const st=STATUS.find(s=>s.v===w.status)||STATUS[0];
+    const rc=roleColor(w.role);
+    const dis=w.status==='A';
+    return `<tr class="${i%2===0?'tr-even':'tr-odd'}">
+      <td style="text-align:center;color:#475569;width:26px">${i+1}</td>
+      <td style="font-weight:700">${w.name}</td>
+      <td style="text-align:center"><span class="pill" style="background:${rc}30;border-color:${rc};color:#fff">${w.role}</span></td>
+      <td style="text-align:center">
+        <select onchange="updW(${i},'status',this.value)" style="background:#0f172a;border:1px solid ${st.c};border-radius:5px;color:${st.c};padding:4px 6px;font-size:12px;outline:none;font-weight:700;cursor:pointer">
+          ${STATUS.map(s=>`<option value="${s.v}"${s.v===w.status?' selected':''}>${s.l}</option>`).join('')}
+        </select>
+      </td>
+      <td style="text-align:center"><input type="number" value="${w.normal}" min="0" max="24" step="0.5" class="num-inp" ${dis?'disabled style="color:#334155"':''} onchange="updW(${i},'normal',+this.value||0)"></td>
+      <td style="text-align:center"><input type="number" value="${w.ot}" min="0" max="12" step="0.5" class="num-inp ot-inp" ${dis?'disabled style="color:#334155"':''} onchange="updW(${i},'ot',+this.value||0)"></td>
+      <td style="text-align:center;font-weight:900;color:#fbbf24;font-size:15px">${tot.toFixed(1)}</td>
+      <td style="text-align:center"><input type="text" value="${w.notes||''}" placeholder="note…" class="notes-inp" onchange="updW(${i},'notes',this.value)"></td>
+      <td style="text-align:center"><button onclick="removeW(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:15px">🗑</button></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('fm-table-wrap').innerHTML=`
+    <table style="min-width:660px">
+      <thead><tr style="background:#0f172a">
+        <th style="text-align:center">#</th><th style="text-align:left">Name</th><th>Role</th><th>Status</th><th>Normal</th><th>OT</th><th>Total</th><th>Notes</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr style="background:#0f3460;border-top:2px solid #f97316">
+        <td colspan="4" style="padding:9px 8px;font-weight:700;color:#fff">TOTAL</td>
+        <td style="text-align:center;font-weight:900;color:#fbbf24;font-size:14px">${tN.toFixed(1)}</td>
+        <td style="text-align:center;font-weight:900;color:#f97316;font-size:14px">${tO.toFixed(1)}</td>
+        <td style="text-align:center;font-weight:900;color:#fbbf24;font-size:15px">${(tN+tO).toFixed(1)}</td>
+        <td colspan="2"></td>
+      </tr></tfoot>
+    </table>`;
+}
+
+function updW(i,f,v){
+  FM_WORKERS[i][f]=v;
+  if(f==='status'&&v==='A'){FM_WORKERS[i].normal=0;FM_WORKERS[i].ot=0;}
+  renderFMTable();
+}
+function removeW(i){ FM_WORKERS.splice(i,1); renderFMTable(); }
+
+function toggleAddRow(){
+  const r=document.getElementById('add-row');
+  r.classList.toggle('hidden');
+  if(!r.classList.contains('hidden')) document.getElementById('nw-name').focus();
+}
+
+function addWorkerRow(){
+  const n=document.getElementById('nw-name').value.trim();
+  if(!n){toast('Enter worker name','err');return;}
+  const role=document.getElementById('nw-role').value;
+  const badge=document.getElementById('nw-badge').value.trim();
+  const gN=+document.getElementById('gN').value||8;
+  const gO=+document.getElementById('gO').value||0;
+  FM_WORKERS.push({name:n,role,badge,status:'P',normal:gN,ot:gO,notes:''});
+  document.getElementById('nw-name').value='';
+  document.getElementById('nw-badge').value='';
+  document.getElementById('add-row').classList.add('hidden');
+  renderFMTable();
+  toast('Worker added — tap 💾 Save!');
+}
+
+function applyAll(){
+  const gN=+document.getElementById('gN').value||0;
+  const gO=+document.getElementById('gO').value||0;
+  FM_WORKERS=FM_WORKERS.map(w=>w.status==='A'?w:{...w,normal:gN,ot:gO});
+  renderFMTable();
+  toast('Applied to all present!');
+}
+
+async function saveAttendance(){
+  const btn=document.getElementById('save-btn');
+  btn.textContent='Saving…'; btn.disabled=true;
+  const date=document.getElementById('fm-date').value;
+  const key='att_'+ME.id+'_'+date;
+  const existing=await cloudGet(key);
+  const payload={workers:FM_WORKERS,foremanId:ME.id,foremanName:ME.name,site:ME.site||'',date,savedAt:new Date().toISOString(),approval:existing?.approval||null,submitted:existing?.submitted||false,jobId:FM_JOB||null};
+  const ok=await cloudSet(key,payload);
+  btn.textContent='💾 Save'; btn.disabled=false;
+  ok?toast('✅ Attendance saved!'):toast('❌ Save failed — check internet','err');
+}
+
+async function submitReview(){
+  const date=document.getElementById('fm-date').value;
+  const key='att_'+ME.id+'_'+date;
+  const ex=await cloudGet(key);
+  if(!ex){toast('Save attendance first!','err');return;}
+  const ok=await cloudSet(key,{...ex,submitted:true,submittedAt:new Date().toISOString()});
+  ok?toast('📨 Submitted for supervisor review!'):toast('Submit failed','err');
+}
+
+// ─── DAILY CARD ───────────────────────────────────────────────────────────────
+function showDailyCard(){
+  const date=document.getElementById('fm-date').value;
+  const tN=FM_WORKERS.reduce((s,w)=>s+(+w.normal||0),0);
+  const tO=FM_WORKERS.reduce((s,w)=>s+(+w.ot||0),0);
+  const pres=FM_WORKERS.filter(w=>w.status==='P'||w.status==='HD').length;
+  const abs=FM_WORKERS.filter(w=>w.status==='A').length;
+  const ap=FM_APPR;
+  const ac=!ap?'#64748b':ap.status==='approved'?'#22c55e':'#ef4444';
+  const al=!ap?'Not reviewed yet':ap.status==='approved'?'✅ APPROVED by '+ap.by:'❌ REJECTED — '+(ap.remarks||'');
+  const p=d=>d.split('-');
+  const fd=p(date); const fmtD=fd[2]+' '+MONTHS[+fd[1]-1]+' '+fd[0];
+
+  // Job info
+  const job=FM_JOB?(DB.jobs||[]).find(j=>j.id===FM_JOB):null;
+  const statusColors={'Ongoing':'#3b82f6','Partially Completed':'#f59e0b','Completed':'#22c55e','On Hold':'#94a3b8','Cancelled':'#ef4444'};
+  const jobSection=job?`
+    <div style="background:#f0f7ff;border-bottom:2px solid #1d4ed8;padding:10px 22px;display:flex;flex-wrap:wrap;gap:16px;align-items:center">
+      <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:1px">📁 Job Details</div>
+      ${[['Job Name',job.name],['Ref No',job.refNo||'—'],['PO Number',job.poNo||'—'],['Type',job.type||'—'],['Site',job.site||'—']].map(([l,v])=>`<div><div style="font-size:9px;color:#888;font-weight:700;text-transform:uppercase">${l}</div><div style="font-size:13px;font-weight:700;color:#0f3460">${v}</div></div>`).join('')}
+      <div><div style="font-size:9px;color:#888;font-weight:700;text-transform:uppercase">Status</div><span style="background:${statusColors[job.status]||'#94a3b8'}22;border:1px solid ${statusColors[job.status]||'#94a3b8'};color:${statusColors[job.status]||'#94a3b8'};border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700">${job.status}</span></div>
+    </div>`:'';
+
+  const rows=FM_WORKERS.map((w,i)=>{
+    const tot=(+w.normal||0)+(+w.ot||0);
+    const st=STATUS.find(s=>s.v===w.status)||STATUS[0];
+    return `<tr style="background:${i%2===0?'#f8fafc':'#fff'};border-bottom:1px solid #e2e8f0">
+      <td style="padding:6px 8px;font-weight:700;color:#64748b">${i+1}</td>
+      <td style="padding:6px 8px;font-weight:700">${w.name}</td>
+      <td style="padding:6px 8px">${w.role}</td>
+      <td style="padding:6px 8px;color:#64748b;font-size:11px">${w.badge||'—'}</td>
+      <td style="padding:6px 8px;text-align:center"><span style="background:${st.c}15;border:1px solid ${st.c};color:${st.c};border-radius:5px;padding:2px 7px;font-size:11px;font-weight:700">${st.l}</span></td>
+      <td style="padding:6px 8px;text-align:center;font-weight:600">${w.normal||0}</td>
+      <td style="padding:6px 8px;text-align:center;font-weight:600;color:#f97316">${w.ot||0}</td>
+      <td style="padding:6px 8px;text-align:center;font-weight:800;color:#0f3460">${tot.toFixed(1)}</td>
+      <td style="padding:6px 8px;font-size:11px;color:#64748b">${w.notes||''}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('daily-card-body').innerHTML=`
+    <div style="border:2px solid #0f3460;border-radius:10px;overflow:hidden;max-width:860px;margin:0 auto">
+      <div style="background:#0f3460;color:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:20px;font-weight:900">🏗 DAILY ATTENDANCE CARD</div><div style="font-size:11px;color:#f97316;margin-top:2px">CONSTRUCTION SITE ATTENDANCE</div></div>
+        <div style="font-weight:700;font-size:15px">${fmtD}</div>
+      </div>
+      <div style="background:#f8fafc;padding:12px 22px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-bottom:2px solid #0f3460">
+        ${[['Foreman',ME.name],['Site',ME.site||'—'],['Date',fmtD],['Workers',FM_WORKERS.length],['Present',pres],['Absent',abs]].map(([l,v])=>`<div><div style="font-size:9px;color:#888;font-weight:700;text-transform:uppercase">${l}</div><div style="font-size:14px;font-weight:700;color:#0f3460">${v}</div></div>`).join('')}
+      </div>
+      ${jobSection}
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);background:#fff7ed;padding:10px 22px;border-bottom:2px solid #f97316">
+        ${[['Normal Hrs',tN.toFixed(1),'#16a34a'],['OT Hrs',tO.toFixed(1),'#f97316'],['Total Hrs',(tN+tO).toFixed(1),'#0f3460'],['Attendance',FM_WORKERS.length>0?Math.round(pres/FM_WORKERS.length*100)+'%':'—','#7c3aed']].map(([l,v,c])=>`<div style="text-align:center"><div style="font-size:22px;font-weight:900;color:${c}">${v}</div><div style="font-size:9px;color:#666;text-transform:uppercase;font-weight:700">${l}</div></div>`).join('')}
+      </div>
+      <div style="background:${ac}15;border-bottom:2px solid ${ac};padding:10px 22px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase">Approval:</span>
+        <span style="font-weight:700;color:${ac};font-size:13px">${al}</span>
+      </div>
+      <div style="padding:14px 22px;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:600px">
+          <thead><tr style="background:#0f3460;color:#fff">${['#','Name','Role','Badge','Status','Normal','OT','Total','Notes'].map((h,i)=>`<th style="padding:7px 8px;text-align:${i<=3||i===8?'left':'center'};font-weight:700">${h}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot><tr style="background:#0f3460;color:#fff"><td colspan="5" style="padding:8px;font-weight:800">TOTAL</td><td style="padding:8px;text-align:center;font-weight:800">${tN.toFixed(1)}</td><td style="padding:8px;text-align:center;font-weight:800;color:#f97316">${tO.toFixed(1)}</td><td style="padding:8px;text-align:center;font-weight:900;color:#fbbf24">${(tN+tO).toFixed(1)}</td><td></td></tr></tfoot>
+        </table>
+      </div>
+      <div style="padding:12px 22px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;border-top:1px solid #e2e8f0">
+        ${['Foreman','Supervisor','HR / Admin'].map(l=>`<div style="text-align:center">${l==='Supervisor'&&ap?.status==='approved'?`<div style="height:36px;border-bottom:2px solid #22c55e;margin-bottom:4px;display:flex;align-items:flex-end;justify-content:center;color:#22c55e;font-weight:700">✅ ${ap.by}</div>`:'<div style="height:36px;border-bottom:1px solid #000;margin-bottom:4px"></div>'}<div style="font-size:9px;color:#888;text-transform:uppercase">${l} Signature</div></div>`).join('')}
+      </div>
+    </div>`;
+  showOnly('scr-dailycard');
+}
+function hideDailyCard(){ showOnly('scr-foreman'); }
+
+// ─── SUPERVISOR ───────────────────────────────────────────────────────────────
+let SV_ENTRIES=[];
+let SV_SEL=null;
+
+function openSupervisor(){
+  showOnly('scr-supervisor');
+  document.getElementById('sv-name').textContent='🔍 '+ME.name;
+  const d=new Date().toISOString().split('T')[0];
+  document.getElementById('sv-date').value=d;
+  loadSupervisor();
+}
+
+async function loadSupervisor(){
+  const date=document.getElementById('sv-date').value;
+  document.getElementById('sv-content').innerHTML='<div style="text-align:center;color:#475569;padding:30px">Loading…</div>';
+  SV_ENTRIES=[];
+  for(const f of DB.foremen){
+    const data=await cloudGet('att_'+f.id+'_'+date);
+    if(data&&Array.isArray(data.workers)) SV_ENTRIES.push({f,data,key:'att_'+f.id+'_'+date});
+  }
+  renderSupervisor(date);
+}
+
+function renderSupervisor(date){
+  const submitted=SV_ENTRIES.filter(e=>e.data.submitted);
+  const drafts=SV_ENTRIES.filter(e=>!e.data.submitted);
+
+  const sumCounts=[
+    ['Total',SV_ENTRIES.length,'#94a3b8'],
+    ['Submitted',submitted.length,'#60a5fa'],
+    ['Approved',SV_ENTRIES.filter(e=>e.data.approval?.status==='approved').length,'#22c55e'],
+    ['Rejected',SV_ENTRIES.filter(e=>e.data.approval?.status==='rejected').length,'#ef4444'],
+    ['Pending',submitted.filter(e=>!e.data.approval).length,'#f59e0b']
+  ];
+  document.getElementById('sv-summary').innerHTML=sumCounts.map(([l,v,c])=>
+    `<div style="background:#1e293b;border:1px solid ${c}44;border-radius:8px;padding:10px 14px;text-align:center;min-width:80px"><div style="font-size:20px;font-weight:900;color:${c}">${v}</div><div style="font-size:9px;color:#64748b;text-transform:uppercase">${l}</div></div>`
+  ).join('');
+
+  let html='';
+  if(SV_ENTRIES.length===0){ html='<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:30px;text-align:center;color:#475569">No attendance found for '+fmtDate(date)+'</div>'; }
+
+  if(submitted.filter(e=>!e.data.approval).length>0){
+    html+=`<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:20px;margin-bottom:14px">
+      <div class="sec-title">⏳ Awaiting Review (${submitted.filter(e=>!e.data.approval).length})</div>
+      ${submitted.filter(e=>!e.data.approval).map((e,i)=>entryRowHTML(e,'pending_'+i,date)).join('')}
+    </div>`;
+  }
+  if(SV_ENTRIES.filter(e=>e.data.approval).length>0){
+    html+=`<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:20px;margin-bottom:14px">
+      <div class="sec-title">✅ Reviewed</div>
+      ${SV_ENTRIES.filter(e=>e.data.approval).map((e,i)=>entryRowHTML(e,'reviewed_'+i,date)).join('')}
+    </div>`;
+  }
+  if(drafts.length>0){
+    html+=`<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:20px;margin-bottom:14px">
+      <div class="sec-title">📝 Not Submitted (${drafts.length})</div>
+      ${drafts.map((e,i)=>entryRowHTML(e,'draft_'+i,date,true)).join('')}
+    </div>`;
+  }
+  document.getElementById('sv-content').innerHTML=html;
+}
+
+function entryRowHTML(e,eid,date,isDraft=false){
+  const {f,data}=e;
+  const ws=data.workers||[];
+  const tN=ws.reduce((s,w)=>s+(+w.normal||0),0), tO=ws.reduce((s,w)=>s+(+w.ot||0),0);
+  const pres=ws.filter(w=>w.status==='P'||w.status==='HD').length;
+  const ap=data.approval;
+  const sc=!ap?'#f59e0b':ap.status==='approved'?'#22c55e':'#ef4444';
+  const sl=!ap?'Pending':ap.status==='approved'?'Approved':'Rejected';
+  return `
+    <div style="border:1px solid ${sc}44;border-radius:8px;margin-bottom:10px;overflow:hidden">
+      <div style="background:#0f172a;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:20px">👷</span>
+        <div style="flex:1">
+          <span style="font-weight:700;font-size:14px">${f.name}</span>
+          ${f.site?`<span style="font-size:11px;color:#f97316;margin-left:8px">${f.site}</span>`:''}
+          <div style="font-size:11px;color:#475569;margin-top:2px">${ws.length} workers · ${pres} present · ${tN.toFixed(1)}h + ${tO.toFixed(1)}h OT</div>
+        </div>
+        <div style="background:${sc}22;border:1px solid ${sc};color:${sc};border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700">${sl}</div>
+        <button onclick="svViewCard('${e.key}')" class="btn btn-sm" style="background:#0f3460;color:#60a5fa">📋 View</button>
+        ${!isDraft?`<button onclick="svToggle('${e.key}')" class="btn btn-sm" id="svbtn-${e.key}" style="background:${SV_SEL===e.key?'#334155':'#7c3aed'};color:#fff">${SV_SEL===e.key?'▲':'▼ Review'}</button>`:''}
+      </div>
+      ${ap?`<div style="background:${sc}10;padding:6px 14px;font-size:11px;color:${sc};border-top:1px solid ${sc}33">${ap.status==='approved'?'✅':'❌'} ${sl} by <b>${ap.by}</b>${ap.remarks?` — <span style="color:#94a3b8">${ap.remarks}</span>`:''}</div>`:''}
+      ${SV_SEL===e.key&&!isDraft?`
+        <div style="background:#1e293b;padding:10px 14px;border-top:1px solid #334155;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input id="sv-remarks-${e.key}" class="inp" placeholder="Remarks (required for rejection)" style="flex:1;min-width:180px;font-size:12px" value="${ap?.remarks||''}">
+          <button onclick="svApprove('${e.key}')" class="btn btn-gr">✅ Approve</button>
+          <button onclick="svReject('${e.key}')" class="btn btn-rd">❌ Reject</button>
+        </div>`:''}
+    </div>`;
+}
+
+function svToggle(key){
+  SV_SEL=SV_SEL===key?null:key;
+  renderSupervisor(document.getElementById('sv-date').value);
+}
+
+async function svApprove(key){
+  const e=SV_ENTRIES.find(x=>x.key===key); if(!e) return;
+  const remarks=document.getElementById('sv-remarks-'+key)?.value||'';
+  const ok=await cloudSet(key,{...e.data,approval:{status:'approved',by:ME.name,supervisorId:ME.id,date:document.getElementById('sv-date').value,at:new Date().toISOString(),remarks}});
+  ok?(toast('✅ Approved!'),SV_SEL=null,loadSupervisor()):toast('Failed','err');
+}
+
+async function svReject(key){
+  const e=SV_ENTRIES.find(x=>x.key===key); if(!e) return;
+  const remarks=document.getElementById('sv-remarks-'+key)?.value||'';
+  if(!remarks.trim()){toast('Enter remarks for rejection','err');return;}
+  const ok=await cloudSet(key,{...e.data,approval:{status:'rejected',by:ME.name,supervisorId:ME.id,date:document.getElementById('sv-date').value,at:new Date().toISOString(),remarks}});
+  ok?(toast('Rejected.'),SV_SEL=null,loadSupervisor()):toast('Failed','err');
+}
+
+function svViewCard(key){
+  const e=SV_ENTRIES.find(x=>x.key===key); if(!e) return;
+  const date=document.getElementById('sv-date').value;
+  renderMonthlyCardView(e.data.workers,e.f,date,e.data.approval||null,'daily');
+}
+
+// ─── ADMIN ────────────────────────────────────────────────────────────────────
+function openAdmin(){ showOnly('scr-admin'); ADMIN_TAB='foremen'; renderAdminTab(); }
+
+function adminTab(t){ ADMIN_TAB=t; renderAdminTab(); }
+
+function renderAdminTab(){
+  ['foremen','supervisors','roster','occupations','jobs','monthly','settings'].forEach(t=>{
+    const b=document.getElementById('atab-'+t);
+    b.style.background=ADMIN_TAB===t?'#f97316':'#1e293b';
+    b.style.color=ADMIN_TAB===t?'#000':'#94a3b8';
+  });
+  const el=document.getElementById('admin-content');
+  if(ADMIN_TAB==='foremen') el.innerHTML=renderAdminForemen();
+  else if(ADMIN_TAB==='supervisors') el.innerHTML=renderAdminSupers();
+  else if(ADMIN_TAB==='roster') el.innerHTML=renderAdminRoster();
+  else if(ADMIN_TAB==='occupations') el.innerHTML=renderAdminOccupations();
+  else if(ADMIN_TAB==='jobs') el.innerHTML=renderAdminJobs();
+  else if(ADMIN_TAB==='monthly') el.innerHTML=renderAdminMonthly();
+  else if(ADMIN_TAB==='settings') el.innerHTML=renderAdminSettings();
+  populateRoleSelects();
+}
+
+function renderAdminForemen(){
+  const rows=DB.foremen.map((f,i)=>`
+    <div class="row">
+      <span style="font-size:22px">👷</span>
+      <div style="flex:1;min-width:160px">
+        <div style="font-weight:700;font-size:14px;margin-bottom:5px">${f.name}</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          <input id="site-${f.id}" class="inp" value="${f.site||''}" placeholder="Site name" style="width:180px;font-size:12px;padding:4px 8px">
+          <button onclick="saveSite('${f.id}')" class="btn btn-gy btn-sm">Save</button>
+        </div>
+      </div>
+      <button onclick="openRosterFor('${f.id}')" class="btn btn-bl btn-sm">📋 Roster</button>
+      <button onclick="delForeman('${f.id}')" class="btn btn-sm" style="background:#1e293b;color:#ef4444">🗑</button>
+    </div>`).join('');
+  return `
+    <div class="card">
+      <div class="sec-title">Add New Foreman</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="new-fm" class="inp" placeholder="Foreman name" style="flex:1;min-width:180px" onkeydown="if(event.key==='Enter')addForeman()">
+        <button class="btn btn-or" onclick="addForeman()">+ Add Foreman</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">All Foremen (${DB.foremen.length})</div>
+      ${DB.foremen.length===0?'<div style="color:#475569;text-align:center;padding:16px">No foremen yet.</div>':rows}
+    </div>`;
+}
+
+function renderAdminSupers(){
+  const rows=DB.supers.map(s=>`
+    <div class="row">
+      <span style="font-size:22px">🔍</span>
+      <div style="flex:1;font-weight:700;font-size:14px">${s.name}</div>
+      <button onclick="delSuper('${s.id}')" class="btn btn-sm" style="background:#1e293b;color:#ef4444">🗑</button>
+    </div>`).join('');
+  return `
+    <div class="card">
+      <div class="sec-title">Add New Supervisor</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="new-sv" class="inp" placeholder="Supervisor name" style="flex:1;min-width:180px" onkeydown="if(event.key==='Enter')addSuper()">
+        <button class="btn btn-or" onclick="addSuper()">+ Add Supervisor</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">All Supervisors (${DB.supers.length})</div>
+      ${DB.supers.length===0?'<div style="color:#475569;text-align:center;padding:16px">No supervisors yet.</div>':rows}
+    </div>`;
+}
+
+function renderAdminRoster(){
+  if(ROSTER_FM){
+    const fmRoster=lsGet('roster_'+ROSTER_FM.id)||[];
+    const rows=fmRoster.map((w,i)=>`
+      <tr class="${i%2===0?'tr-even':'tr-odd'}">
+        <td style="text-align:center;color:#475569">${i+1}</td>
+        <td style="font-weight:600">${w.name}</td>
+        <td style="text-align:center">
+          <select onchange="updRosterW(${i},'role',this.value)" class="sel" style="font-size:12px;padding:3px 6px">
+            ${ROLES.map(r=>`<option${r===w.role?' selected':''}>${r}</option>`).join('')}
+          </select>
+        </td>
+        <td style="text-align:center"><input value="${w.badge||''}" class="inp" style="width:76px;font-size:12px;padding:3px 7px" onchange="updRosterW(${i},'badge',this.value)"></td>
+        <td style="text-align:center"><button onclick="delRosterW(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:15px">🗑</button></td>
+      </tr>`).join('');
+    return `
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div class="sec-title" style="margin:0">👷 ${ROSTER_FM.name} — Roster</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-gr btn-sm" onclick="saveRoster()">💾 Save Roster</button>
+            <button class="btn btn-gy btn-sm" onclick="ROSTER_FM=null;renderAdminTab()">← Back</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap">
+          <input id="rw-name" class="inp" placeholder="Worker name *" style="flex:2;min-width:140px" onkeydown="if(event.key==='Enter')addRosterW()">
+          <select id="rw-role" class="sel"></select>
+          <input id="rw-badge" class="inp" placeholder="Badge" style="width:84px">
+          <button class="btn btn-or" onclick="addRosterW()">+ Add</button>
+        </div>
+        ${fmRoster.length===0?'<div style="color:#475569;text-align:center;padding:16px">No workers yet</div>':`
+        <table><thead><tr style="background:#0f172a"><th style="text-align:center">#</th><th style="text-align:left">Name</th><th>Role</th><th>Badge</th><th>Del</th></tr></thead><tbody>${rows}</tbody></table>`}
+      </div>`;
+  }
+  const rows=DB.foremen.map(f=>`
+    <div class="row">
+      <span style="font-size:20px">👷</span>
+      <div style="flex:1"><div style="font-weight:700">${f.name}</div>${f.site?`<div style="font-size:11px;color:#f97316">${f.site}</div>`:''}</div>
+      <button onclick="openRosterFor('${f.id}')" class="btn btn-bl btn-sm">✏️ Edit</button>
+    </div>`).join('');
+  return `<div class="card"><div class="sec-title">Select Foreman</div>${rows||'<div style="color:#475569;text-align:center;padding:16px">No foremen added yet.</div>'}</div>`;
+}
+
+const JOB_STATUSES=['Ongoing','Partially Completed','Completed','On Hold','Cancelled'];
+const JOB_TYPES=['Civil','Electrical','Mechanical','Plumbing','Structural','Finishing','Road Work','Other'];
+
+function renderAdminJobs(){
+  const jobs=DB.jobs||[];
+  const statusColors={'Ongoing':'#3b82f6','Partially Completed':'#f59e0b','Completed':'#22c55e','On Hold':'#94a3b8','Cancelled':'#ef4444'};
+  const foremanOptions=DB.foremen.map(f=>`<option value="${f.id}">${f.name}${f.site?' — '+f.site:''}</option>`).join('');
+
+  const rows=jobs.map((j,i)=>{
+    const sc=statusColors[j.status]||'#94a3b8';
+    const assigned=(j.assignedForemen||[]).map(fid=>{
+      const f=DB.foremen.find(x=>x.id===fid);
+      return f?`<span style="background:#1e3a5f;border:1px solid #3b82f6;color:#60a5fa;font-size:10px;padding:2px 7px;border-radius:5px;font-weight:700">${f.name}</span>`:null;
+    }).filter(Boolean).join(' ');
+    return `
+    <div style="background:#0f172a;border:1px solid #334155;border-left:4px solid ${sc};border-radius:8px;padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-weight:800;font-size:15px;color:#fff;margin-bottom:5px">📁 ${j.name}</div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:#94a3b8;line-height:2">
+            ${j.refNo?`<span>🔖 Ref: <b style="color:#fbbf24">${j.refNo}</b></span>`:''}
+            ${j.poNo?`<span>📄 PO: <b style="color:#fbbf24">${j.poNo}</b></span>`:''}
+            ${j.type?`<span>🏗 Type: <b style="color:#fff">${j.type}</b></span>`:''}
+            ${j.site?`<span>📍 Site: <b style="color:#f97316">${j.site}</b></span>`:''}
+            ${j.startDate?`<span>📅 Start: <b style="color:#fff">${j.startDate}</b></span>`:''}
+            ${j.endDate?`<span>🏁 End: <b style="color:#fff">${j.endDate}</b></span>`:''}
+          </div>
+          ${assigned?`<div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap;align-items:center"><span style="font-size:10px;color:#64748b">👷 Assigned:</span>${assigned}</div>`:'<div style="font-size:11px;color:#475569;margin-top:4px">⚠️ No foremen assigned</div>'}
+          ${j.description?`<div style="font-size:11px;color:#64748b;margin-top:4px">${j.description}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <span style="background:${sc}22;border:1px solid ${sc};color:${sc};border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700">${j.status}</span>
+          <div style="display:flex;gap:6px">
+            <button onclick="editJob(${i})" class="btn btn-sm" style="background:#1e3a5f;color:#60a5fa;padding:4px 10px;font-size:11px">✏️ Edit</button>
+            <button onclick="delJob(${i})" class="btn btn-sm" style="background:#1e293b;color:#ef4444;padding:4px 10px;font-size:11px">🗑</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="card">
+      <div class="sec-title">➕ Add / Edit Job</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">Job Name *</label>
+          <input id="job-name" class="inp" placeholder="e.g. Block A Renovation">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">Job Ref No</label>
+          <input id="job-ref" class="inp" placeholder="e.g. JOB-2024-001">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">PO Number</label>
+          <input id="job-po" class="inp" placeholder="e.g. PO-2024-0055">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">Site / Location</label>
+          <input id="job-site" class="inp" placeholder="e.g. Block B, Main Road">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">Job Type</label>
+          <select id="job-type" class="sel" style="width:100%">
+            <option value="">— Select Type —</option>
+            ${JOB_TYPES.map(t=>`<option>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">Job Status</label>
+          <select id="job-status" class="sel" style="width:100%">
+            ${JOB_STATUSES.map(s=>`<option>${s}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">Start Date</label>
+          <input id="job-start" class="inp" type="date">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">End Date</label>
+          <input id="job-end" class="inp" type="date">
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:3px">Description (optional)</label>
+        <input id="job-desc" class="inp" placeholder="Brief description of work">
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;color:#94a3b8;display:block;margin-bottom:5px">👷 Assign Foremen <span style="color:#475569;font-weight:400">(hold Ctrl/Cmd to select multiple)</span></label>
+        <select id="job-foremen" multiple style="background:#0f172a;border:1px solid #475569;border-radius:6px;color:#f1f5f9;padding:6px;width:100%;min-height:90px;font-size:13px;outline:none">
+          ${foremanOptions||'<option disabled>No foremen added yet</option>'}
+        </select>
+        <div style="font-size:11px;color:#475569;margin-top:4px">On Android: tap first foreman, then tap others to select multiple</div>
+      </div>
+      <button class="btn btn-or" onclick="addJob()" style="width:100%;padding:11px">➕ Save Job</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">All Jobs (${jobs.length})</div>
+      ${jobs.length===0
+        ?'<div style="color:#475569;text-align:center;padding:20px">No jobs added yet.</div>'
+        :rows}
+    </div>`;
+}
+}
+
+async function addJob(){
+  const name=document.getElementById('job-name').value.trim();
+  if(!name){toast('Enter job name','err');return;}
+  const sel=document.getElementById('job-foremen');
+  const assignedForemen=sel?Array.from(sel.selectedOptions).map(o=>o.value):[];
+  const job={
+    id:window._editingJobId||('J'+Date.now()),
+    name,
+    refNo:document.getElementById('job-ref').value.trim(),
+    poNo:document.getElementById('job-po').value.trim(),
+    site:document.getElementById('job-site').value.trim(),
+    type:document.getElementById('job-type').value,
+    status:document.getElementById('job-status').value||'Ongoing',
+    startDate:document.getElementById('job-start').value,
+    endDate:document.getElementById('job-end').value,
+    description:document.getElementById('job-desc').value.trim(),
+    assignedForemen,
+    createdAt:new Date().toISOString()
+  };
+  window._editingJobId=null;
+  if(!DB.jobs) DB.jobs=[];
+  DB.jobs.push(job);
+  const ok=await cloudSetDB(DB);
+  if(ok){ toast('✅ Job saved!'); renderAdminTab(); }
+  else toast('❌ Save failed','err');
+}
+
+async function delJob(i){
+  if(!confirm('Delete this job?')) return;
+  DB.jobs.splice(i,1);
+  await cloudSetDB(DB);
+  toast('Job removed.');
+  renderAdminTab();
+}
+
+function editJob(i){
+  const j=DB.jobs[i];
+  window._editingJobId=j.id;
+  document.querySelector('#job-name').value=j.name||'';
+  document.querySelector('#job-ref').value=j.refNo||'';
+  document.querySelector('#job-po').value=j.poNo||'';
+  document.querySelector('#job-site').value=j.site||'';
+  document.querySelector('#job-type').value=j.type||'';
+  document.querySelector('#job-status').value=j.status||'Ongoing';
+  document.querySelector('#job-start').value=j.startDate||'';
+  document.querySelector('#job-end').value=j.endDate||'';
+  document.querySelector('#job-desc').value=j.description||'';
+  // Restore foreman selection
+  const sel=document.querySelector('#job-foremen');
+  if(sel&&j.assignedForemen){
+    Array.from(sel.options).forEach(o=>{ o.selected=(j.assignedForemen||[]).includes(o.value); });
+  }
+  DB.jobs.splice(i,1);
+  toast('✏️ Edit the form above and tap Save Job');
+  window.scrollTo(0,0);
+}
+
+function renderAdminOccupations(){
+  const base=['Labour','Mason','Electrician','Operator','Driver','Jointer'];
+  const custom=DB.customRoles||[];
+  const allRoles=base.concat(custom.filter(r=>!base.includes(r)));
+  const rows=allRoles.map((r,i)=>{
+    const isBase=base.includes(r);
+    const rc=roleColor(r);
+    return `<div class="row" style="border:1px solid ${rc}44">
+      <span style="background:${rc}25;border:1px solid ${rc};color:#fff;font-size:11px;padding:3px 10px;border-radius:8px;font-weight:700">${r}</span>
+      <div style="flex:1;font-size:12px;color:${isBase?'#475569':'#94a3b8'}">${isBase?'Default occupation':'Custom'}</div>
+      ${!isBase?`<button onclick="delOccupation('${r}')" class="btn btn-sm" style="background:#1e293b;color:#ef4444">🗑 Remove</button>`:'<span style="font-size:11px;color:#334155">Built-in</span>'}
+    </div>`;
+  }).join('');
+  return `
+    <div class="card">
+      <div class="sec-title">Add Custom Occupation</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="new-occ" class="inp" placeholder="e.g. Welder, Plumber, Painter…" style="flex:1;min-width:180px" onkeydown="if(event.key==='Enter')addOccupation()">
+        <button class="btn btn-or" onclick="addOccupation()">+ Add Occupation</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-title">All Occupations (${allRoles.length})</div>
+      ${rows}
+    </div>`;
+}
+
+function addOccupation(){
+  const n=document.getElementById('new-occ').value.trim();
+  if(!n){toast('Enter occupation name','err');return;}
+  if(ROLES.includes(n)){toast(n+' already exists','err');return;}
+  if(!DB.customRoles) DB.customRoles=[];
+  DB.customRoles.push(n);
+  ROLES.push(n);
+  cloudSetDB(DB);
+  document.getElementById('new-occ').value='';
+  toast('✅ '+n+' added!');
+  renderAdminTab();
+}
+
+function delOccupation(name){
+  if(!confirm('Remove "'+name+'" occupation?')) return;
+  DB.customRoles=(DB.customRoles||[]).filter(r=>r!==name);
+  ROLES=ROLES.filter(r=>r!==name);
+  cloudSetDB(DB);
+  toast('Removed.');
+  renderAdminTab();
+}
+
+function renderAdminSettings(){
+  return `
+    <div class="card">
+      <div class="sec-title">🔐 Change Admin Password</div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:12px;color:#94a3b8;display:block;margin-bottom:4px">Current Admin Password</label>
+        <input id="pw-current" class="inp" type="password" placeholder="Enter current password">
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:12px;color:#94a3b8;display:block;margin-bottom:4px">New Admin Password</label>
+        <input id="pw-new" class="inp" type="password" placeholder="Enter new password (min 6 chars)">
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;color:#94a3b8;display:block;margin-bottom:4px">Confirm New Password</label>
+        <input id="pw-confirm" class="inp" type="password" placeholder="Repeat new password">
+      </div>
+      <button class="btn btn-or" onclick="changeAdminPw()" style="width:100%;padding:11px">🔐 Change Admin Password</button>
+      <div id="pw-msg" style="margin-top:10px;font-size:13px;display:none"></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">🔒 Change App Unlock Password</div>
+      <div style="font-size:12px;color:#94a3b8;margin-bottom:12px">This is the password all foremen enter when opening the app for the first time.</div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:12px;color:#94a3b8;display:block;margin-bottom:4px">New Unlock Password</label>
+        <input id="unlock-new" class="inp" type="password" placeholder="Enter new unlock password">
+      </div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:12px;color:#94a3b8;display:block;margin-bottom:4px">Confirm</label>
+        <input id="unlock-confirm" class="inp" type="password" placeholder="Repeat unlock password">
+      </div>
+      <button class="btn btn-bl" onclick="changeUnlockPw()" style="width:100%;padding:11px">🔒 Change Unlock Password</button>
+      <div id="unlock-msg" style="margin-top:10px;font-size:13px;display:none"></div>
+    </div>
+
+    <div class="card" style="background:#0f2744;border-color:#1d4ed8">
+      <div class="sec-title" style="color:#60a5fa">ℹ️ Current Passwords Info</div>
+      <div style="font-size:12px;color:#94a3b8;line-height:1.9">
+        Admin password: <b style="color:#f97316">stored securely in database</b><br>
+        Unlock password: <b style="color:#f97316">stored securely in database</b><br>
+        After changing, tell foremen the new unlock password.<br>
+        <span style="color:#ef4444">⚠️ Write passwords down somewhere safe!</span>
+      </div>
+    </div>`;
+}
+
+async function changeAdminPw(){
+  const cur=document.getElementById('pw-current').value;
+  const nw=document.getElementById('pw-new').value;
+  const cf=document.getElementById('pw-confirm').value;
+  const msg=document.getElementById('pw-msg');
+  msg.style.display='block';
+  if(!_checkAdmin(cur)){ msg.style.color='#ef4444'; msg.textContent='❌ Current password is wrong.'; return; }
+  if(nw.length<6){ msg.style.color='#ef4444'; msg.textContent='❌ New password must be at least 6 characters.'; return; }
+  if(nw!==cf){ msg.style.color='#ef4444'; msg.textContent='❌ Passwords do not match.'; return; }
+  // Save new admin password to DB
+  DB.adminPw=nw.split('').map(c=>c.charCodeAt(0));
+  const ok=await cloudSetDB(DB);
+  if(ok){
+    // Update in-memory check
+    window._customAdminPw=nw;
+    msg.style.color='#22c55e'; msg.textContent='✅ Admin password changed successfully!';
+    document.getElementById('pw-current').value='';
+    document.getElementById('pw-new').value='';
+    document.getElementById('pw-confirm').value='';
+  } else {
+    msg.style.color='#ef4444'; msg.textContent='❌ Failed to save. Check internet.';
+  }
+}
+
+async function changeUnlockPw(){
+  const nw=document.getElementById('unlock-new').value;
+  const cf=document.getElementById('unlock-confirm').value;
+  const msg=document.getElementById('unlock-msg');
+  msg.style.display='block';
+  if(nw.length<4){ msg.style.color='#ef4444'; msg.textContent='❌ Password must be at least 4 characters.'; return; }
+  if(nw!==cf){ msg.style.color='#ef4444'; msg.textContent='❌ Passwords do not match.'; return; }
+  DB.unlockPw=nw.split('').map(c=>c.charCodeAt(0));
+  const ok=await cloudSetDB(DB);
+  if(ok){
+    window._customUnlockPw=nw;
+    msg.style.color='#22c55e'; msg.textContent='✅ Unlock password changed! Tell foremen the new password: '+nw;
+    document.getElementById('unlock-new').value='';
+    document.getElementById('unlock-confirm').value='';
+  } else {
+    msg.style.color='#ef4444'; msg.textContent='❌ Failed to save. Check internet.';
+  }
+}
+
+function renderAdminMonthly(){
+  const y=new Date().getFullYear();
+  const m=new Date().getMonth()+1;
+  return `
+    <div class="card">
+      <div class="sec-title">Monthly Timecard Report</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <select id="mon-mm" class="sel">${MONTHS.map((mn,i)=>`<option value="${i+1}"${i+1===m?' selected':''}>${mn}</option>`).join('')}</select>
+        <select id="mon-yy" class="sel">${[2024,2025,2026,2027].map(yr=>`<option${yr===y?' selected':''}>${yr}</option>`).join('')}</select>
+        <button class="btn btn-or" onclick="genMonthly()">📊 Generate</button>
+      </div>
+    </div>
+    <div id="monthly-result"></div>`;
+}
+
+// Admin actions
+function addForeman(){
+  const n=document.getElementById('new-fm').value.trim();
+  if(!n){toast('Enter foreman name','err');return;}
+  DB.foremen.push({id:'F'+Date.now(),name:n,site:''});
+  cloudSetDB(DB);
+  document.getElementById('new-fm').value='';
+  toast('✅ '+n+' added!');
+  renderAdminTab();
+}
+function addSuper(){
+  const n=document.getElementById('new-sv').value.trim();
+  if(!n){toast('Enter supervisor name','err');return;}
+  DB.supers.push({id:'S'+Date.now(),name:n});
+  cloudSetDB(DB);
+  document.getElementById('new-sv').value='';
+  toast('✅ '+n+' added!');
+  renderAdminTab();
+}
+function delForeman(id){
+  if(!confirm('Delete this foreman?')) return;
+  DB.foremen=DB.foremen.filter(f=>f.id!==id);
+  cloudSetDB(DB);
+  toast('Removed.');
+  renderAdminTab();
+}
+function delSuper(id){
+  DB.supers=DB.supers.filter(s=>s.id!==id);
+  cloudSetDB(DB);
+  toast('Removed.');
+  renderAdminTab();
+}
+async function saveSite(id){
+  const site=document.getElementById('site-'+id)?.value||'';
+  DB.foremen=DB.foremen.map(f=>f.id===id?{...f,site}:f);
+  await cloudSetDB(DB);
+  toast('Site saved!');
+  renderAdminTab();
+}
+function openRosterFor(id){ ROSTER_FM=DB.foremen.find(f=>f.id===id); ADMIN_TAB='roster'; renderAdminTab(); }
+function addRosterW(){
+  const n=document.getElementById('rw-name').value.trim();
+  if(!n){toast('Enter name','err');return;}
+  const r=document.getElementById('rw-role').value;
+  const b=document.getElementById('rw-badge').value.trim();
+  const roster=lsGet('roster_'+ROSTER_FM.id)||[];
+  roster.push({name:n,role:r,badge:b});
+  lsSet('roster_'+ROSTER_FM.id,roster);
+  document.getElementById('rw-name').value=''; document.getElementById('rw-badge').value='';
+  renderAdminTab();
+}
+function updRosterW(i,f,v){ const r=lsGet('roster_'+ROSTER_FM.id)||[]; r[i][f]=v; lsSet('roster_'+ROSTER_FM.id,r); }
+function delRosterW(i){ const r=lsGet('roster_'+ROSTER_FM.id)||[]; r.splice(i,1); lsSet('roster_'+ROSTER_FM.id,r); renderAdminTab(); }
+async function saveRoster(){
+  const roster=lsGet('roster_'+ROSTER_FM.id)||[];
+  const ok=await cloudSet('roster_'+ROSTER_FM.id,roster);
+  ok?toast('✅ Roster saved!'):toast('❌ Save failed','err');
+}
+
+// ─── MONTHLY REPORT ───────────────────────────────────────────────────────────
+async function genMonthly(){
+  const mm=+document.getElementById('mon-mm').value;
+  const yy=+document.getElementById('mon-yy').value;
+  const res=document.getElementById('monthly-result');
+  res.innerHTML='<div style="text-align:center;color:#475569;padding:30px">Generating… please wait</div>';
+  const days=new Date(yy,mm,0).getDate();
+  const data={};
+  for(const f of DB.foremen){
+    data[f.id]={name:f.name,site:f.site,workers:{},jobIds:{}};
+    for(let d=1;d<=days;d++){
+      const att=await cloudGet('att_'+f.id+'_'+yy+'-'+String(mm).padStart(2,'0')+'-'+String(d).padStart(2,'0'));
+      if(att?.workers){
+        if(att.jobId) data[f.id].jobIds[d]=att.jobId;
+        att.workers.forEach(w=>{
+          if(!data[f.id].workers[w.name]) data[f.id].workers[w.name]={role:w.role,badge:w.badge||'',days:{}};
+          data[f.id].workers[w.name].days[d]={status:w.status,normal:+w.normal||0,ot:+w.ot||0,notes:w.notes||'',approved:att.approval?.status==='approved',jobId:att.jobId||null};
+        });
+      }
+    }
+  }
+  const dns=Array.from({length:days},(_,i)=>i+1);
+  let html='';
+  for(const f of DB.foremen){
+    const fd=data[f.id]; if(!fd) continue;
+    const wNames=Object.keys(fd.workers||{}); if(!wNames.length) continue;
+    const wRows=wNames.map((wn,wi)=>{
+      const wd=fd.workers[wn]; let tN=0,tO=0,d2=0;
+      dns.forEach(d=>{const day=wd.days[d];if(day){tN+=day.normal||0;tO+=day.ot||0;if(day.status==='P'||day.status==='HD')d2++;}});
+      const rc=roleColor(wd.role);
+      const cells=dns.map(d=>{
+        const day=wd.days[d];
+        const sc=!day?'#334155':day.status==='P'?'#22c55e':day.status==='A'?'#ef4444':day.status==='HD'?'#f59e0b':'#a855f7';
+        return `<td style="padding:3px 1px;text-align:center"><div title="${day?'N:'+day.normal+' OT:'+day.ot+(day.approved?' ✅':''):'—'}" style="width:17px;height:17px;border-radius:3px;background:${sc}20;border:1px solid ${sc};display:flex;align-items:center;justify-content:center;font-size:7px;color:${sc};font-weight:700;margin:0 auto">${day?day.status:''}</div></td>`;
+      }).join('');
+      return `<tr style="background:${wi%2===0?'#1e293b':'#0f172a'}">
+        <td style="padding:5px 7px;font-weight:700;text-align:left">${wn}</td>
+        <td style="padding:5px 3px;text-align:center"><span style="background:${rc}25;border:1px solid ${rc};color:#fff;font-size:9px;padding:1px 5px;border-radius:6px;font-weight:700">${wd.role}</span></td>
+        ${cells}
+        <td style="padding:5px;text-align:center;font-weight:800;color:#4ade80">${tN.toFixed(1)}</td>
+        <td style="padding:5px;text-align:center;font-weight:800;color:#fb923c">${tO.toFixed(1)}</td>
+        <td style="padding:5px;text-align:center;font-weight:900;color:#fbbf24">${(tN+tO).toFixed(1)}</td>
+        <td style="padding:5px;text-align:center;color:#94a3b8">${d2}</td>
+        <td style="padding:5px;text-align:center"><button onclick="printWorker('${wn}','${f.id}',${mm},${yy})" style="background:#2563eb;border:none;color:#fff;border-radius:4px;padding:3px 7px;cursor:pointer;font-size:10px;font-weight:700">Print</button></td>
+      </tr>`;
+    }).join('');
+    html+=`<div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-weight:800;font-size:15px;color:#f97316">👷 ${f.name}</span>
+        ${f.site?`<span style="background:#f97316;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700">${f.site}</span>`:''}
+      </div>
+      <div style="overflow-x:auto">
+        <table style="border-collapse:collapse;font-size:11px">
+          <thead><tr style="background:#0f172a">
+            <th style="padding:7px 5px;text-align:left;font-size:10px;font-weight:700;color:#f97316;text-transform:uppercase;border-bottom:2px solid #334155;min-width:110px;white-space:nowrap">Worker</th>
+            <th style="padding:7px 3px;text-align:center;font-size:10px;font-weight:700;color:#f97316;text-transform:uppercase;border-bottom:2px solid #334155;white-space:nowrap">Role</th>
+            ${dns.map(d=>`<th style="padding:5px 1px;text-align:center;font-size:10px;font-weight:700;color:#f97316;text-transform:uppercase;border-bottom:2px solid #334155;width:20px">${d}</th>`).join('')}
+            <th style="padding:7px 5px;text-align:center;font-size:10px;font-weight:700;color:#4ade80;text-transform:uppercase;border-bottom:2px solid #334155;white-space:nowrap">Norm</th>
+            <th style="padding:7px 5px;text-align:center;font-size:10px;font-weight:700;color:#fb923c;text-transform:uppercase;border-bottom:2px solid #334155;white-space:nowrap">OT</th>
+            <th style="padding:7px 5px;text-align:center;font-size:10px;font-weight:700;color:#fbbf24;text-transform:uppercase;border-bottom:2px solid #334155;white-space:nowrap">Total</th>
+            <th style="padding:7px 5px;text-align:center;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;border-bottom:2px solid #334155;white-space:nowrap">Days</th>
+            <th style="padding:7px 5px;text-align:center;font-size:10px;font-weight:700;color:#f97316;text-transform:uppercase;border-bottom:2px solid #334155;white-space:nowrap">🖨</th>
+          </tr></thead>
+          <tbody>${wRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+  res.innerHTML=html||'<div class="card" style="text-align:center;color:#475569;padding:20px">No attendance data for this month.</div>';
+  // Store data for print
+  window._monthData=data; window._monthMM=mm; window._monthYY=yy;
+}
+
+function printWorker(wn,fid,mm,yy){
+  const f=DB.foremen.find(x=>x.id===fid);
+  const data=window._monthData;
+  if(!data){toast('Generate report first','err');return;}
+  const wd=data[fid]?.workers[wn]||{days:{}};
+  const jobIds=data[fid]?.jobIds||{};
+  renderMonthlyCardView(null,f,null,null,'monthly',{wn,wd,mm,yy,jobIds});
+}
+
+// ─── PRINT CARDS ─────────────────────────────────────────────────────────────
+function fmtDate(d){ if(!d)return''; const p=d.split('-'); return p[2]+' '+MONTHS[+p[1]-1]+' '+p[0]; }
+
+function renderMonthlyCardView(workers,foreman,date,appr,type,mArgs){
+  if(type==='daily'){
+    showOnly('scr-dailycard');
+    // reuse daily card logic with passed workers
+    const tN=workers.reduce((s,w)=>s+(+w.normal||0),0);
+    const tO=workers.reduce((s,w)=>s+(+w.ot||0),0);
+    const pres=workers.filter(w=>w.status==='P'||w.status==='HD').length;
+    const abs=workers.filter(w=>w.status==='A').length;
+    const ac=!appr?'#64748b':appr.status==='approved'?'#22c55e':'#ef4444';
+    const al=!appr?'Not reviewed yet':appr.status==='approved'?'✅ APPROVED by '+appr.by:'❌ REJECTED — '+(appr.remarks||'');
+    const fmtD=fmtDate(date);
+    const rows=workers.map((w,i)=>{
+      const tot=(+w.normal||0)+(+w.ot||0);
+      const st=STATUS.find(s=>s.v===w.status)||STATUS[0];
+      return `<tr style="background:${i%2===0?'#f8fafc':'#fff'};border-bottom:1px solid #e2e8f0">
+        <td style="padding:6px 8px;font-weight:700;color:#64748b">${i+1}</td>
+        <td style="padding:6px 8px;font-weight:700">${w.name}</td>
+        <td style="padding:6px 8px">${w.role}</td>
+        <td style="padding:6px 8px;color:#64748b;font-size:11px">${w.badge||'—'}</td>
+        <td style="padding:6px 8px;text-align:center"><span style="background:${st.c}15;border:1px solid ${st.c};color:${st.c};border-radius:5px;padding:2px 7px;font-size:11px;font-weight:700">${st.l}</span></td>
+        <td style="padding:6px 8px;text-align:center;font-weight:600">${w.normal||0}</td>
+        <td style="padding:6px 8px;text-align:center;font-weight:600;color:#f97316">${w.ot||0}</td>
+        <td style="padding:6px 8px;text-align:center;font-weight:800;color:#0f3460">${tot.toFixed(1)}</td>
+        <td style="padding:6px 8px;font-size:11px;color:#64748b">${w.notes||''}</td>
+      </tr>`;
+    }).join('');
+    document.getElementById('daily-card-body').innerHTML=`
+      <div style="border:2px solid #0f3460;border-radius:10px;overflow:hidden;max-width:860px;margin:0 auto">
+        <div style="background:#0f3460;color:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:20px;font-weight:900">🏗 DAILY ATTENDANCE CARD</div><div style="font-size:11px;color:#f97316;margin-top:2px">CONSTRUCTION SITE ATTENDANCE</div></div>
+          <div style="font-weight:700;font-size:15px">${fmtD}</div>
+        </div>
+        <div style="background:#f8fafc;padding:12px 22px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-bottom:2px solid #0f3460">
+          ${[['Foreman',foreman.name],['Site',foreman.site||'—'],['Date',fmtD],['Workers',workers.length],['Present',pres],['Absent',abs]].map(([l,v])=>`<div><div style="font-size:9px;color:#888;font-weight:700;text-transform:uppercase">${l}</div><div style="font-size:14px;font-weight:700;color:#0f3460">${v}</div></div>`).join('')}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);background:#fff7ed;padding:10px 22px;border-bottom:2px solid #f97316">
+          ${[['Normal Hrs',tN.toFixed(1),'#16a34a'],['OT Hrs',tO.toFixed(1),'#f97316'],['Total Hrs',(tN+tO).toFixed(1),'#0f3460'],['Attendance',workers.length>0?Math.round(pres/workers.length*100)+'%':'—','#7c3aed']].map(([l,v,c])=>`<div style="text-align:center"><div style="font-size:22px;font-weight:900;color:${c}">${v}</div><div style="font-size:9px;color:#666;text-transform:uppercase;font-weight:700">${l}</div></div>`).join('')}
+        </div>
+        <div style="background:${ac}15;border-bottom:2px solid ${ac};padding:10px 22px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase">Approval:</span>
+          <span style="font-weight:700;color:${ac};font-size:13px">${al}</span>
+        </div>
+        <div style="padding:14px 22px;overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:600px">
+            <thead><tr style="background:#0f3460;color:#fff">${['#','Name','Role','Badge','Status','Normal','OT','Total','Notes'].map((h,i)=>`<th style="padding:7px 8px;text-align:${i<=3||i===8?'left':'center'};font-weight:700">${h}</th>`).join('')}</tr></thead>
+            <tbody>${rows}</tbody>
+            <tfoot><tr style="background:#0f3460;color:#fff"><td colspan="5" style="padding:8px;font-weight:800">TOTAL</td><td style="padding:8px;text-align:center;font-weight:800">${tN.toFixed(1)}</td><td style="padding:8px;text-align:center;font-weight:800;color:#f97316">${tO.toFixed(1)}</td><td style="padding:8px;text-align:center;font-weight:900;color:#fbbf24">${(tN+tO).toFixed(1)}</td><td></td></tr></tfoot>
+          </table>
+        </div>
+        <div style="padding:12px 22px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;border-top:1px solid #e2e8f0">
+          ${['Foreman','Supervisor','HR / Admin'].map(l=>`<div style="text-align:center">${l==='Supervisor'&&appr?.status==='approved'?`<div style="height:36px;border-bottom:2px solid #22c55e;margin-bottom:4px;display:flex;align-items:flex-end;justify-content:center;color:#22c55e;font-weight:700">✅ ${appr.by}</div>`:'<div style="height:36px;border-bottom:1px solid #000;margin-bottom:4px"></div>'}<div style="font-size:9px;color:#888;text-transform:uppercase">${l} Signature</div></div>`).join('')}
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Monthly card
+  const {wn,wd,mm,yy,jobIds}=mArgs;
+  const days=new Date(yy,mm,0).getDate();
+  const dns=Array.from({length:days},(_,i)=>i+1);
+  let tN=0,tO=0,wD=0,aD=0;
+  dns.forEach(d=>{const day=wd.days[d];if(day){tN+=day.normal||0;tO+=day.ot||0;if(day.status==='P'||day.status==='HD')wD++;if(day.status==='A')aD++;}});
+
+  // Collect all unique jobs for this worker's month
+  const usedJobIds=[...new Set(dns.map(d=>wd.days[d]?.jobId||(jobIds&&jobIds[d])||null).filter(Boolean))];
+  const usedJobs=usedJobIds.map(id=>(DB.jobs||[]).find(j=>j.id===id)).filter(Boolean);
+  const statusColors={'Ongoing':'#3b82f6','Partially Completed':'#f59e0b','Completed':'#22c55e','On Hold':'#94a3b8','Cancelled':'#ef4444'};
+
+  const jobSummarySection=usedJobs.length>0?`
+    <div style="background:#f0f7ff;border-bottom:2px solid #1d4ed8;padding:10px 22px">
+      <div style="font-size:9px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px">📁 Jobs This Month</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px">
+        ${usedJobs.map(j=>`<div style="background:#fff;border:1px solid #bfdbfe;border-radius:7px;padding:6px 12px;font-size:11px">
+          <b style="color:#0f3460">${j.name}</b>
+          ${j.refNo?`<span style="color:#888"> · Ref: </span><b style="color:#d97706">${j.refNo}</b>`:''}
+          ${j.poNo?`<span style="color:#888"> · PO: </span><b style="color:#d97706">${j.poNo}</b>`:''}
+          ${j.type?`<span style="color:#888"> · </span><span style="color:#374151">${j.type}</span>`:''}
+          <span style="margin-left:5px;background:${statusColors[j.status]||'#94a3b8'}18;border:1px solid ${statusColors[j.status]||'#94a3b8'};color:${statusColors[j.status]||'#94a3b8'};border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700">${j.status}</span>
+        </div>`).join('')}
+      </div>
+    </div>`:'';
+
+  const rows=dns.map(d=>{
+    const day=wd.days[d]; const st=day?STATUS.find(s=>s.v===day.status)||STATUS[0]:null;
+    const tot=day?(+day.normal||0)+(+day.ot||0):0;
+    const dayJobId=day?.jobId||(jobIds&&jobIds[d])||null;
+    const dayJob=dayJobId?(DB.jobs||[]).find(j=>j.id===dayJobId):null;
+    return `<tr style="background:${d%2===0?'#f9f9f9':'#fff'};border-bottom:1px solid #e2e8f0">
+      <td style="padding:5px 8px;font-weight:700">${d}</td>
+      <td style="padding:5px 8px;font-size:11px;color:#666">${String(d).padStart(2,'0')+' '+MONTHS[mm-1]+' '+yy}</td>
+      <td style="padding:5px 8px;font-size:10px;color:#1d4ed8;white-space:nowrap">${dayJob?`<span title="${dayJob.name}">${dayJob.refNo||dayJob.name.slice(0,10)}</span>`:'<span style="color:#ccc">—</span>'}</td>
+      <td style="padding:5px 8px;text-align:center">${st?`<span style="background:${st.c}15;border:1px solid ${st.c};color:${st.c};border-radius:5px;padding:2px 6px;font-size:11px;font-weight:700">${st.l}</span>`:'<span style="color:#ccc">—</span>'}</td>
+      <td style="padding:5px 8px;text-align:center;font-weight:600">${day?.normal||0}</td>
+      <td style="padding:5px 8px;text-align:center;color:#d97706;font-weight:600">${day?.ot||0}</td>
+      <td style="padding:5px 8px;text-align:center;font-weight:800;color:#0f3460">${tot.toFixed(1)}</td>
+      <td style="padding:5px 8px;text-align:center">${day?.approved?'<span style="color:#16a34a;font-weight:700">✅</span>':'<span style="color:#cbd5e1">—</span>'}</td>
+      <td style="padding:5px 8px;font-size:11px;color:#94a3b8">${day?.notes||''}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('monthly-card-body').innerHTML=`
+    <div style="border:2px solid #0f3460;border-radius:10px;overflow:hidden;max-width:860px;margin:0 auto">
+      <div style="background:#0f3460;color:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:20px;font-weight:900">🏗 MONTHLY TIME CARD</div><div style="font-size:11px;color:#f97316;margin-top:2px">CONSTRUCTION SITE ATTENDANCE</div></div>
+        <div style="font-weight:700;font-size:14px">${MONTHS[mm-1]} ${yy}</div>
+      </div>
+      <div style="background:#f8fafc;padding:12px 22px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-bottom:2px solid #0f3460">
+        ${[['Worker',wn],['Role',wd.role||'—'],['Badge',wd.badge||'—'],['Foreman',foreman.name],['Site',foreman.site||'—'],['Period',MONTHS[mm-1]+' '+yy]].map(([l,v])=>`<div><div style="font-size:9px;color:#888;font-weight:700;text-transform:uppercase">${l}</div><div style="font-size:14px;font-weight:700;color:#0f3460">${v}</div></div>`).join('')}
+      </div>
+      ${jobSummarySection}
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);background:#fff7ed;padding:10px 22px;border-bottom:2px solid #f97316">
+        ${[['Present',wD,'#16a34a'],['Absent',aD,'#dc2626'],['Normal Hrs',tN.toFixed(1),'#16a34a'],['OT Hrs',tO.toFixed(1),'#f97316'],['Total Hrs',(tN+tO).toFixed(1),'#0f3460']].map(([l,v,c])=>`<div style="text-align:center"><div style="font-size:22px;font-weight:900;color:${c}">${v}</div><div style="font-size:9px;color:#666;text-transform:uppercase;font-weight:700">${l}</div></div>`).join('')}
+      </div>
+      <div style="padding:14px 22px;overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="background:#0f3460;color:#fff">${['Day','Date','Job Ref','Status','Normal','OT','Total','✅','Notes'].map((h,i)=>`<th style="padding:7px 8px;text-align:${i<2||i===8?'left':'center'};font-weight:700;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot><tr style="background:#0f3460;color:#fff"><td colspan="4" style="padding:8px;font-weight:800">TOTALS</td><td style="padding:8px;text-align:center;font-weight:800">${tN.toFixed(1)}</td><td style="padding:8px;text-align:center;font-weight:800;color:#f97316">${tO.toFixed(1)}</td><td style="padding:8px;text-align:center;font-weight:900;color:#fbbf24">${(tN+tO).toFixed(1)}</td><td colspan="2"></td></tr></tfoot>
+        </table>
+      </div>
+      <div style="padding:10px 22px 18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;border-top:1px solid #e2e8f0">
+        ${['Worker Signature','Supervisor Signature','HR / Admin'].map(l=>`<div style="text-align:center"><div style="height:34px;border-bottom:1px solid #000;margin-bottom:4px"></div><div style="font-size:9px;color:#888;text-transform:uppercase">${l}</div></div>`).join('')}
+      </div>
+    </div>`;
+  showOnly('scr-monthlycard');
+}
+function hideMonthlyCard(){ showOnly('scr-admin'); }
+
+// ─── APP PASSWORD ─────────────────────────────────────────────────────────────
+const APP_PASSWORD   = 'site2024';
+// Admin password stored as character codes - not plain text visible in source
+const _ap = [65,100,109,105,110,64,50,48,50,52,35,83,105,116,101];
+function _checkAdmin(pw){
+  // Use DB stored password if admin changed it
+  if(window._customAdminPw) return pw===window._customAdminPw;
+  if(DB.adminPw) return pw===DB.adminPw.map(c=>String.fromCharCode(c)).join('');
+  return pw===_ap.map(c=>String.fromCharCode(c)).join('');
+}
+function _checkUnlock(pw){
+  if(window._customUnlockPw) return pw===window._customUnlockPw;
+  if(DB.unlockPw) return pw===DB.unlockPw.map(c=>String.fromCharCode(c)).join('');
+  return pw===APP_PASSWORD;
+}
+
+function checkLock(){
+  const pw=document.getElementById('lock-pw').value;
+  if(_checkUnlock(pw)){
+    lsSet('unlocked','yes');
+    initApp();
+  } else {
+    document.getElementById('lock-err').style.display='block';
+    document.getElementById('lock-pw').value='';
+    document.getElementById('lock-pw').focus();
+  }
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+(function init(){
+  // Credentials hardcoded - skip setup screen
+  lsSet('app_cfg',CFG);
+  // Check if already unlocked on this device
+  if(lsGet('unlocked')==='yes'){
+    initApp();
+  } else {
+    showOnly('scr-lock');
+  }
+})();
+</script>
+</body>
+</html>
