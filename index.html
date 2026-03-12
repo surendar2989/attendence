@@ -1563,14 +1563,13 @@ const APP_PASSWORD   = 'site2024';
 // Admin password stored as character codes - not plain text visible in source
 const _ap = [65,100,109,105,110,64,50,48,50,52,35,83,105,116,101];
 function _checkAdmin(pw){
-  // Use DB stored password if admin changed it
   if(window._customAdminPw) return pw===window._customAdminPw;
-  if(DB.adminPw) return pw===DB.adminPw.map(c=>String.fromCharCode(c)).join('');
+  if(DB&&DB.adminPw) return pw===DB.adminPw.map(c=>String.fromCharCode(c)).join('');
   return pw===_ap.map(c=>String.fromCharCode(c)).join('');
 }
 function _checkUnlock(pw){
   if(window._customUnlockPw) return pw===window._customUnlockPw;
-  if(DB.unlockPw) return pw===DB.unlockPw.map(c=>String.fromCharCode(c)).join('');
+  if(DB&&DB.unlockPw&&DB.unlockPw.length>0) return pw===DB.unlockPw.map(c=>String.fromCharCode(c)).join('');
   return pw===APP_PASSWORD;
 }
 
@@ -1587,12 +1586,15 @@ function checkLock(){
 }
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
-(function init(){
-  // Credentials hardcoded - skip setup screen
+(async function init(){
   lsSet('app_cfg',CFG);
-  // Check if already unlocked on this device
+  // Load DB first so password check works correctly
+  DB=await cloudGetDB();
+  const base=['Labour','Mason','Electrician','Operator','Driver','Jointer'];
+  ROLES=base.concat((DB.customRoles||[]).filter(r=>!base.includes(r)));
   if(lsGet('unlocked')==='yes'){
-    initApp();
+    showOnly('scr-login');
+    renderLogin();
   } else {
     showOnly('scr-lock');
   }
